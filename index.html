@@ -246,13 +246,15 @@ function buildMermaidGraph(articles) {
     document.getElementById('knowledgeGraph').closest('.graph-section').style.display = 'none';
     return;
   }
+  // Use 'n_' prefix to ensure valid Mermaid IDs (can't start with number)
+  function makeId(slug) { return 'n_' + slug.replace(/-/g,'_').replace(/\./g, '_'); }
+  
   let graph = 'graph LR\n';
   // Nodes
   articles.forEach(a => {
-    const id = a.slug.replace(/-/g,'_');
+    const id = makeId(a.slug);
     const label = a.title.length > 16 ? a.title.slice(0,16)+'…' : a.title;
     graph += `  ${id}["${label}"]\n`;
-    graph += `  click ${id} "${a.url}"\n`;
   });
   // Edges by shared tags
   const edges = new Set();
@@ -260,22 +262,32 @@ function buildMermaidGraph(articles) {
     for (let j = i+1; j < articles.length; j++) {
       const shared = articles[i].tags.filter(t => articles[j].tags.includes(t));
       if (shared.length > 0) {
-        const a = articles[i].slug.replace(/-/g,'_');
-        const b = articles[j].slug.replace(/-/g,'_');
+        const a = makeId(articles[i].slug);
+        const b = makeId(articles[j].slug);
         const edgeKey = [a,b].sort().join('--');
         if (!edges.has(edgeKey)) {
           edges.add(edgeKey);
-          graph += `  ${a} -->|"#${shared[0]}"| ${b}\n`;
+          // Use text without # for edge labels to avoid comment interpretation
+          const tagLabel = shared[0];
+          graph += `  ${a} -->|"${tagLabel}"| ${b}\n`;
         }
       }
     }
   }
+  // Add click handlers after graph definition
+  articles.forEach(a => {
+    const id = makeId(a.slug);
+    graph += `  click ${id} "${a.url}"\n`;
+  });
+  
   const el = document.getElementById('knowledgeGraph');
   mermaid.render('knowledgeGraphSvg', graph).then(({ svg, bindFunctions }) => {
     el.innerHTML = svg;
     if (bindFunctions) bindFunctions(el);
-  }).catch(() => {
-    el.textContent = graph;
+  }).catch((err) => {
+    el.innerHTML = '<pre style="color:#e55c5c;font-size:12px;overflow-x:auto;">' + 
+      'Mermaid Error: ' + String(err) + '\n\nGraph text:\n' + 
+      graph.replace(/</g, '&lt;') + '</pre>';
   });
 }
 
