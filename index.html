@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dolo Reads · 知识阅读库</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222638;
+      --border: #2e3347;
+      --accent: #e55c5c;
+      --accent2: #f0a070;
+      --text: #e2e4ee;
+      --text-muted: #8b90a8;
+      --link: #7eb8f7;
+      --tag-bg: #1e2438;
+      --tag-active-bg: #e55c5c;
+      --tag-active-text: #fff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,BlinkMacSystemFont,sans-serif; font-size: 16px; line-height: 1.8; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: rgba(15,17,23,0.94); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 28px; z-index: 100; gap: 16px;
+    }
+    .topbar-brand { font-size: 16px; font-weight: 700; letter-spacing: .02em; }
+    .topbar-brand span { color: var(--accent); }
+    .topbar-sub { font-size: 13px; color: var(--text-muted); flex: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 28px 48px;
+      max-width: 900px; margin: 0 auto;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.25; margin-bottom: 14px; }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero p { font-size: 1rem; color: var(--text-muted); max-width: 520px; margin: 0 auto 32px; }
+
+    /* ── TAG FILTER ── */
+    .tag-filter {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 8px; margin-bottom: 48px;
+    }
+    .tag-chip {
+      padding: 5px 14px; border-radius: 20px;
+      background: var(--tag-bg); color: var(--text-muted);
+      font-size: 13px; cursor: pointer; border: 1px solid var(--border);
+      transition: all .18s;
+    }
+    .tag-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .tag-chip.active { background: var(--tag-active-bg); color: var(--tag-active-text); border-color: var(--tag-active-bg); }
+
+    /* ── ARTICLE CARDS ── */
+    .section-label {
+      max-width: 900px; margin: 0 auto 20px;
+      padding: 0 28px;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .cards-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px; padding: 0 28px;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; text-decoration: none;
+      transition: border-color .2s, transform .2s;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .card-date { font-size: 12px; color: var(--text-muted); }
+    .card-title { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.4; }
+    .card-summary { font-size: 13px; color: var(--text-muted); line-height: 1.6; flex: 1; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .card-tag {
+      padding: 2px 10px; border-radius: 20px;
+      background: var(--tag-bg); color: var(--text-muted); font-size: 11px;
+    }
+
+    /* ── KNOWLEDGE GRAPH ── */
+    .graph-section {
+      max-width: 900px; margin: 60px auto 0; padding: 0 28px 80px;
+    }
+    .graph-section h2 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+    .graph-section p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+    .mermaid-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; overflow-x: auto;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 32px; font-size: 13px;
+      color: var(--text-muted); border-top: 1px solid var(--border);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.7rem; }
+      .cards-grid { grid-template-columns: 1fr; padding: 0 16px; }
+      .hero { padding: 88px 16px 36px; }
+      .graph-section { padding: 0 16px 60px; }
+      .section-label { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">Dolo <span>Reads</span></div>
+  <div class="topbar-sub">多乐的知识阅读库</div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>每一篇文章，<em>都值得被真正读懂</em></h1>
+    <p>用金字塔原理重构逻辑，用苏格拉底反诘审视漏洞。这里是我处理过的每一篇好文章。</p>
+    <div class="tag-filter" id="tagFilter"></div>
+  </div>
+
+  <div class="section-label">文章列表</div>
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <div class="graph-section">
+    <h2>知识图谱</h2>
+    <p>节点 = 文章，连线 = 共同标签。随文章积累自动生长。</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid" id="knowledgeGraph"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built with AI · <a href="https://github.com/DoloresSusu/dolo-reads" style="color:var(--link);">GitHub</a>
+</footer>
+
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+const ARTICLES_JSON = 'https://raw.githubusercontent.com/DoloresSusu/dolo-reads/main/_data/articles.json';
+
+async function loadArticles() {
+  // Try fetching from CDN; fallback to inline data for local dev
+  let articles;
+  try {
+    const r = await fetch(ARTICLES_JSON);
+    articles = await r.json();
+  } catch {
+    articles = INLINE_ARTICLES;
+  }
+  return articles;
+}
+
+// Inline fallback (same data as _data/articles.json, updated by skill each run)
+const INLINE_ARTICLES = [
+  {
+    "slug": "0226-2028-intelligence-crisis",
+    "title": "2028 全球智能危机：重构分析",
+    "date": "2026-02-26",
+    "tags": ["AI", "经济", "未来", "科技", "金融"],
+    "summary": "AI生产力奇迹制造分配灾难，三层多米诺骨牌逐步触发系统性危机——这不是周期衰退，是底层假设的颠覆。",
+    "url": "articles/0226-2028-intelligence-crisis/"
+  }
+];
+
+let allArticles = [];
+let activeTag = null;
+
+function renderCards(articles) {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  const filtered = activeTag ? articles.filter(a => a.tags.includes(activeTag)) : articles;
+  if (filtered.length === 0) {
+    grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0;">暂无此标签的文章</p>';
+    return;
+  }
+  filtered.slice().sort((a,b) => b.date.localeCompare(a.date)).forEach(article => {
+    const card = document.createElement('a');
+    card.href = article.url;
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-date">${article.date}</div>
+      <div class="card-title">${article.title}</div>
+      <div class="card-summary">${article.summary}</div>
+      <div class="card-tags">${article.tags.map(t => `<span class="card-tag">#${t}</span>`).join('')}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderTagFilter(articles) {
+  const tagCounts = {};
+  articles.forEach(a => a.tags.forEach(t => { tagCounts[t] = (tagCounts[t]||0)+1; }));
+  const filter = document.getElementById('tagFilter');
+  filter.innerHTML = '';
+  const allBtn = document.createElement('span');
+  allBtn.className = 'tag-chip active';
+  allBtn.textContent = `全部 (${articles.length})`;
+  allBtn.onclick = () => { activeTag = null; document.querySelectorAll('.tag-chip').forEach(c=>c.classList.remove('active')); allBtn.classList.add('active'); renderCards(allArticles); };
+  filter.appendChild(allBtn);
+  Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).forEach(([tag, count]) => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.textContent = `#${tag} (${count})`;
+    chip.onclick = () => {
+      activeTag = tag;
+      document.querySelectorAll('.tag-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      renderCards(allArticles);
+    };
+    filter.appendChild(chip);
+  });
+}
+
+function buildMermaidGraph(articles) {
+  if (articles.length < 2) {
+    document.getElementById('knowledgeGraph').closest('.graph-section').style.display = 'none';
+    return;
+  }
+  let graph = 'graph LR\n';
+  // Nodes
+  articles.forEach(a => {
+    const id = a.slug.replace(/-/g,'_');
+    const label = a.title.length > 16 ? a.title.slice(0,16)+'…' : a.title;
+    graph += `  ${id}["${label}"]\n`;
+    graph += `  click ${id} "${a.url}"\n`;
+  });
+  // Edges by shared tags
+  const edges = new Set();
+  for (let i = 0; i < articles.length; i++) {
+    for (let j = i+1; j < articles.length; j++) {
+      const shared = articles[i].tags.filter(t => articles[j].tags.includes(t));
+      if (shared.length > 0) {
+        const a = articles[i].slug.replace(/-/g,'_');
+        const b = articles[j].slug.replace(/-/g,'_');
+        const edgeKey = [a,b].sort().join('--');
+        if (!edges.has(edgeKey)) {
+          edges.add(edgeKey);
+          graph += `  ${a} -->|"#${shared[0]}"| ${b}\n`;
+        }
+      }
+    }
+  }
+  document.getElementById('knowledgeGraph').textContent = graph;
+  mermaid.run({ nodes: [document.getElementById('knowledgeGraph')] });
+}
+
+(async () => {
+  allArticles = await loadArticles();
+  renderTagFilter(allArticles);
+  renderCards(allArticles);
+  buildMermaidGraph(allArticles);
+})();
+</script>
+</body>
+</html>
