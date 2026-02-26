@@ -262,8 +262,22 @@ function buildMermaidGraph(articles) {
       }
     }
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7394/ingest/742499d6-a062-4d0c-b78d-c3c9c3e437fa',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fc0ff2'},body:JSON.stringify({sessionId:'fc0ff2',location:'index.html:buildMermaidGraph',message:'graph text built, about to set textContent',data:{graphText:graph,securityLevel:mermaid.getConfig ? mermaid.getConfig().securityLevel : 'unknown'},timestamp:Date.now(),hypothesisId:'H-A,H-C'})}).catch(()=>{});
+  // #endregion
   document.getElementById('knowledgeGraph').textContent = graph;
-  mermaid.run({ nodes: [document.getElementById('knowledgeGraph')] });
+  // #region agent log
+  fetch('http://127.0.0.1:7394/ingest/742499d6-a062-4d0c-b78d-c3c9c3e437fa',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fc0ff2'},body:JSON.stringify({sessionId:'fc0ff2',location:'index.html:before-mermaid-run',message:'calling mermaid.run()',data:{elementInnerHTML:document.getElementById('knowledgeGraph').textContent.slice(0,200)},timestamp:Date.now(),hypothesisId:'H-B'})}).catch(()=>{});
+  // #endregion
+  mermaid.run({ nodes: [document.getElementById('knowledgeGraph')] }).then(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7394/ingest/742499d6-a062-4d0c-b78d-c3c9c3e437fa',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fc0ff2'},body:JSON.stringify({sessionId:'fc0ff2',location:'index.html:mermaid-run-resolved',message:'mermaid.run() resolved successfully',data:{renderedInnerHTML:document.getElementById('knowledgeGraph').innerHTML.slice(0,200)},timestamp:Date.now(),hypothesisId:'H-B'})}).catch(()=>{});
+    // #endregion
+  }).catch(err => {
+    // #region agent log
+    fetch('http://127.0.0.1:7394/ingest/742499d6-a062-4d0c-b78d-c3c9c3e437fa',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fc0ff2'},body:JSON.stringify({sessionId:'fc0ff2',location:'index.html:mermaid-run-rejected',message:'mermaid.run() REJECTED',data:{error:String(err),errorMessage:err && err.message},timestamp:Date.now(),hypothesisId:'H-B,H-A,H-C'})}).catch(()=>{});
+    // #endregion
+  });
 }
 
 (async () => {
