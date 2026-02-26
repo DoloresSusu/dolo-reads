@@ -3,825 +3,528 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2028 全球智能危机：重构分析</title>
+  <title>2028 全球智能危机 — Dolo Reads</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
+    /* === midnight-blue 主题 === */
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #222638;
-      --border: #2e3347;
-      --accent: #e55c5c;
-      --accent2: #f0a070;
-      --text: #e2e4ee;
-      --text-muted: #8b90a8;
-      --link: #7eb8f7;
-      --tag-bg: #1e2438;
-      --nav-width: 260px;
-      --header-h: 56px;
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2233;
+      --border: #1e3a5f;
+      --accent: #22d3ee;
+      --accent2: #06b6d4;
+      --text: #e0f2fe;
+      --text-muted: #7db8d4;
+      --link: #38bdf8;
+      --tag-bg: #0c1f35;
+      --sidebar-active: #22d3ee;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,sans-serif; font-size: 16px; line-height: 1.85; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 16px;
-      line-height: 1.8;
-    }
+    /* Topbar */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(10,14,26,0.96); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; z-index: 100; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .breadcrumb { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+    .breadcrumb a { color: var(--link); text-decoration: none; }
+    .tab-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 13px; transition: all .2s; white-space: nowrap; }
+    .tab-btn.active { background: var(--accent); color: #0a0e1a; border-color: var(--accent); font-weight: 600; }
+    .menu-btn { display: none; background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 18px; }
 
-    /* ── TOP BAR ── */
-    .topbar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--header-h);
-      background: rgba(15,17,23,0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      z-index: 100;
-      gap: 16px;
-    }
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; padding-top: 56px; }
 
-    .topbar-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    /* Sidebar */
+    .sidebar { width: 260px; position: fixed; top: 56px; left: 0; bottom: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0 40px; z-index: 90; transition: transform .25s ease; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .nav-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); padding: 0 20px 8px; }
+    .nav-item { display: block; padding: 7px 20px; font-size: 13px; color: var(--text-muted); text-decoration: none; transition: all .15s; border-left: 2px solid transparent; }
+    .nav-item:hover, .nav-item.active { color: var(--sidebar-active); border-left-color: var(--sidebar-active); background: rgba(34,211,238,0.05); }
+    .nav-item.h3 { padding-left: 32px; font-size: 12px; }
 
-    .menu-btn {
-      display: none;
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-    }
+    /* Main */
+    .main { margin-left: 260px; flex: 1; padding: 40px 52px; max-width: 900px; }
 
-    /* ── LAYOUT ── */
-    .layout {
-      display: flex;
-      min-height: 100vh;
-      padding-top: var(--header-h);
-    }
+    /* Sections */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--nav-width);
-      position: fixed;
-      top: var(--header-h);
-      left: 0;
-      bottom: 0;
-      overflow-y: auto;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 24px 0 40px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-      z-index: 90;
-      transition: transform 0.25s ease;
-    }
+    /* Article meta */
+    .article-meta { margin-bottom: 2rem; }
+    .article-date { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; background: var(--tag-bg); color: var(--text-muted); font-size: 12px; border: 1px solid var(--border); }
 
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    .nav-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      padding: 0 20px 10px;
-    }
-
-    .nav-item {
-      display: block;
-      padding: 9px 20px;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13.5px;
-      border-left: 3px solid transparent;
-      transition: all 0.18s;
-      line-height: 1.4;
-    }
-
-    .nav-item:hover {
-      color: var(--text);
-      background: var(--surface2);
-      border-left-color: var(--border);
-    }
-
-    .nav-item.active {
-      color: var(--accent2);
-      background: rgba(240, 160, 112, 0.08);
-      border-left-color: var(--accent2);
-    }
-
-    .nav-item .num {
-      font-size: 11px;
-      opacity: 0.5;
-      margin-right: 4px;
-    }
-
-    /* ── MAIN ── */
-    .main {
-      margin-left: var(--nav-width);
-      flex: 1;
-      min-width: 0;
-    }
-
-    .content {
-      max-width: 840px;
-      margin: 0 auto;
-      padding: 48px 40px 80px;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      border-left: 4px solid var(--accent);
-      padding: 20px 24px;
-      background: linear-gradient(135deg, rgba(229,92,92,0.08), rgba(229,92,92,0.02));
-      border-radius: 0 12px 12px 0;
-      margin-bottom: 40px;
-    }
-
-    .hero h1 {
-      font-size: clamp(22px, 4vw, 32px);
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.3;
-      margin-bottom: 12px;
-    }
-
-    .hero-meta {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    .hero-thesis {
-      background: rgba(229,92,92,0.1);
-      border: 1px solid rgba(229,92,92,0.25);
-      border-radius: 8px;
-      padding: 14px 18px;
-      font-size: 15px;
-      font-weight: 500;
-      color: #f0b0a0;
-      line-height: 1.6;
-    }
-
-    /* ── SECTIONS ── */
-    .section {
-      margin-bottom: 56px;
-      scroll-margin-top: calc(var(--header-h) + 20px);
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .section-num {
-      background: var(--accent);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      min-width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    h2 {
-      font-size: clamp(18px, 3vw, 22px);
-      font-weight: 700;
-      color: #fff;
-    }
-
-    h3 {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--accent2);
-      margin: 28px 0 14px;
-      padding-left: 12px;
-      border-left: 3px solid var(--accent2);
-    }
-
-    /* ── TEXT ── */
-    p { margin-bottom: 14px; color: var(--text); }
-
-    strong { color: #fff; font-weight: 600; }
-
+    /* Typography */
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; line-height: 1.3; color: var(--text); }
+    h2 { font-size: 1.4rem; font-weight: 600; margin: 2.8rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; color: var(--text); }
+    h3 { font-size: 1.05rem; font-weight: 600; margin: 2rem 0 .7rem; color: var(--accent); }
+    p { margin-bottom: 1rem; }
+    ul, ol { padding-left: 1.6rem; margin-bottom: 1rem; }
+    li { margin-bottom: .45rem; }
+    li > ul, li > ol { margin-top: .4rem; margin-bottom: .4rem; }
+    blockquote { border-left: 3px solid var(--accent); padding: .7rem 1.1rem; background: var(--surface2); border-radius: 0 8px 8px 0; margin: 1.4rem 0; color: var(--text-muted); font-style: italic; }
+    blockquote strong { color: var(--text); font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 14px; }
+    th { background: var(--surface2); padding: 10px 14px; text-align: left; font-weight: 600; border: 1px solid var(--border); color: var(--accent); }
+    td { padding: 9px 14px; border: 1px solid var(--border); vertical-align: top; }
+    code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: .85em; color: var(--accent); }
     a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+    strong { color: var(--text); }
 
-    /* ── LISTS ── */
-    ul, ol {
-      padding-left: 22px;
-      margin-bottom: 16px;
-    }
+    /* Mermaid */
+    .mermaid { overflow-x: auto; margin: 1.5rem 0; background: var(--surface2); padding: 24px; border-radius: 12px; border: 1px solid var(--border); }
 
-    li {
-      margin-bottom: 6px;
-      color: var(--text);
-    }
+    /* Related reads */
+    .related { margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .related h3 { margin-top: 0; color: var(--text-muted); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .related-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 1rem; }
+    .related-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-decoration: none; transition: border-color .2s; display: block; }
+    .related-card:hover { border-color: var(--accent); }
+    .related-card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+    .related-card-summary { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+    .related-card-date { font-size: 11px; color: var(--text-muted); margin-top: 8px; opacity: .7; }
 
-    li > ul, li > ol {
-      margin-top: 6px;
-      margin-bottom: 0;
-    }
+    /* Meta footer */
+    .meta-footer { color: var(--text-muted); font-size: 13px; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 
-    /* ── CALLOUT ── */
-    .callout {
-      background: var(--surface2);
-      border-left: 4px solid var(--accent2);
-      border-radius: 0 10px 10px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
-      font-size: 14.5px;
-    }
-
-    .callout.red { border-left-color: var(--accent); background: rgba(229,92,92,0.07); }
-    .callout p { margin-bottom: 4px; }
-    .callout p:last-child { margin-bottom: 0; }
-
-    /* ── TABLE ── */
-    .table-wrap {
-      overflow-x: auto;
-      margin: 20px 0;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 480px;
-    }
-
-    th {
-      background: var(--surface2);
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 11px 16px;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-      vertical-align: top;
-    }
-
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-
-    /* ── MERMAID ── */
-    .mermaid-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 16px;
-      margin: 20px 0;
-      overflow-x: auto;
-      text-align: center;
-    }
-
-    .mermaid-wrap .mermaid { display: inline-block; }
-
-    /* ── DIVIDER ── */
-    hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 40px 0;
-    }
-
-    /* ── FINAL BOX ── */
-    .final-box {
-      background: linear-gradient(135deg, var(--surface2), rgba(126,184,247,0.05));
-      border: 1px solid rgba(126,184,247,0.2);
-      border-radius: 14px;
-      padding: 28px;
-      margin-top: 8px;
-    }
-
-    .final-question {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 16px;
-      line-height: 1.4;
-    }
-
-    .final-box ul { padding-left: 20px; }
-    .final-box li { color: var(--text-muted); margin-bottom: 8px; }
-    .final-box li strong { color: var(--text); }
-
-    /* ── MOBILE ── */
+    /* Responsive */
     @media (max-width: 768px) {
-      :root { --nav-width: 0px; }
-
       .menu-btn { display: block; }
-
-      .sidebar {
-        transform: translateX(-100%);
-        width: 280px;
-        z-index: 200;
-        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-      }
-
-      .sidebar.open { transform: translateX(0); }
-
-      .overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 150;
-      }
-
-      .overlay.open { display: block; }
-
-      .main { margin-left: 0; }
-
-      .content { padding: 28px 18px 60px; }
-
-      table { min-width: 380px; }
-    }
-
-    /* ── MERMAID OVERRIDES ── */
-    .mermaid svg {
-      max-width: 100%;
-      height: auto;
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.5); }
+      .main { margin-left: 0; padding: 24px 18px; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.2rem; }
+      .topbar { padding: 0 14px; gap: 8px; }
+      .tab-btn { padding: 5px 10px; font-size: 12px; }
+      .breadcrumb { display: none; }
+      .related-cards { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <span class="breadcrumb"><a href="../../index.html">← Dolo Reads</a></span>
+    <span class="topbar-title">2028 全球智能危机</span>
+    <button class="tab-btn active" onclick="switchTab('analysis',this)">重构分析</button>
+    <button class="tab-btn" onclick="switchTab('critique',this)">批判分析</button>
+  </header>
 
-<!-- Top Bar -->
-<header class="topbar">
-  <button class="menu-btn" id="menuBtn" aria-label="目录">☰</button>
-  <a href="../../index.html" style="font-size:13px;color:#7eb8f7;text-decoration:none;white-space:nowrap;">← Dolo Reads</a>
-  <div class="topbar-title">2028 全球智能危机：重构分析</div>
-</header>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
 
-<!-- Mobile overlay -->
-<div class="overlay" id="overlay"></div>
-
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-  <div class="nav-label">目录导航</div>
-  <a class="nav-item active" href="#intro"><span class="num">①</span>核心论点</a>
-  <a class="nav-item" href="#loop"><span class="num">②</span>负反馈循环</a>
-  <a class="nav-item" href="#dominos"><span class="num">③</span>三层多米诺</a>
-  <a class="nav-item" href="#different"><span class="num">④</span>为什么这次不一样</a>
-  <a class="nav-item" href="#fiscal"><span class="num">⑤</span>财政困境</a>
-  <a class="nav-item" href="#policy"><span class="num">⑥</span>政策困境</a>
-  <a class="nav-item" href="#dual"><span class="num">⑦</span>双重回路全景</a>
-  <a class="nav-item" href="#now"><span class="num">⑧</span>现在是 2026 年</a>
-</nav>
-
-<!-- Main -->
-<div class="layout">
-  <main class="main">
-    <div class="content">
-
-      <!-- Hero -->
-      <div class="hero" id="top">
-        <h1>2028 全球智能危机<br>重构分析</h1>
-        <div class="hero-meta">
-          来源：CitriniResearch · 2026年2月22日 · 以 2028 年6月视角写成的情景推演
+      <!-- ════════════ TAB 1: 重构分析 ════════════ -->
+      <section class="tab-section active" id="tab-analysis">
+        <div class="article-meta">
+          <div class="article-date">2026-02-26 · 来源：CitriniResearch</div>
+          <div class="tags">
+            <span class="tag">#AI</span>
+            <span class="tag">#经济</span>
+            <span class="tag">#未来</span>
+            <span class="tag">#科技</span>
+            <span class="tag">#金融</span>
+          </div>
         </div>
-        <div class="hero-thesis">
-          💡 核心命题：AI 的持续成功，恰恰可能是最大的宏观空头信号。
-        </div>
-      </div>
 
-      <!-- Section 1 -->
-      <section class="section" id="intro">
-        <div class="section-header">
-          <div class="section-num">一</div>
-          <h2>核心论点（金字塔顶层）</h2>
-        </div>
-        <p><strong>AI 带来了生产力奇迹，却制造了分配灾难。</strong></p>
+        <h1>2028 全球智能危机：重构分析</h1>
+
+        <h2>一、核心论点（金字塔顶层）</h2>
+        <blockquote>
+          <strong>AI生产力奇迹制造了分配灾难：当机器接管白领智能工作，经济输出在增长，但人类收入在萎缩——这是一场「鬼魂GDP」危机，不是周期性衰退，而是"人类智能溢价"的系统性崩塌。</strong>
+        </blockquote>
+        <p>三层递进结构：</p>
         <ul>
-          <li>GDP 增长、企业利润、股市创新高——所有"好数字"都是真实的</li>
-          <li>但产出不再流经家庭、不再流经消费，而是直接流向算力和资本</li>
-          <li>这不是周期性衰退，是<strong>结构性重构</strong>，没有自然修复机制</li>
+          <li><strong>第一层</strong>：AI大规模替代白领工作 → 「人类智能置换螺旋」，负反馈无自然刹车</li>
+          <li><strong>第二层</strong>：消费萎缩 → 中介层瓦解 → 私募信贷违约 → 保险/按揭系统承压</li>
+          <li><strong>第三层</strong>：政府税收结构性失血 + 政策工具对这类危机根本失效</li>
         </ul>
-        <div class="callout red">
-          <p>2028年6月，失业率 10.2%，S&amp;P 500 较 2026 年10月高点下跌 38%。</p>
-          <p>两年时间，从"局部行业冲击"演变成没有人认识的经济体。</p>
-        </div>
-      </section>
 
-      <hr />
-
-      <!-- Section 2 -->
-      <section class="section" id="loop">
-        <div class="section-header">
-          <div class="section-num">二</div>
-          <h2>核心负反馈循环：人类智能替代螺旋</h2>
-        </div>
-
-        <div class="mermaid-wrap">
-          <div class="mermaid">
-graph TD
-    A["AI 能力提升 + 成本下降"]:::red --> B["企业裁员白领"]
-    B --> C["节省的人力成本 → 投入更多 AI"]
+        <h2>二、核心负反馈循环（人类智能置换螺旋）</h2>
+        <div class="mermaid" id="mermaid-spiral">
+graph LR
+    A["AI能力提升<br/>成本持续下降"] --> B["企业裁员白领<br/>AI替代劳动力"]
+    B --> C["利润扩张<br/>更多AI资本投入"]
     C --> A
-    B --> D["失业白领收入下降"]:::orange
-    D --> E["消费支出减少"]:::orange
-    E --> F["消费型企业利润承压"]:::orange
-    F --> G["企业加速采购 AI 以压缩成本"]
+    B --> D["白领收入崩塌<br/>消费萎缩"]
+    D --> E["企业营收承压<br/>中介层瓦解"]
+    E --> F["企业投入更多AI<br/>以保护利润"]
+    F --> A
+        </div>
+        <ul>
+          <li><strong>无自然刹车</strong>：普通衰退有自我修正机制（超建→降速→复苏），但AI替代是OpEx替换，不是投资泡沫</li>
+          <li><strong>加速悖论</strong>：受AI冲击最大的企业（ServiceNow等）为了存活，成了AI最激进的使用者——「最受威胁者成为最积极的采纳者」</li>
+          <li><strong>两级飞轮同时转动</strong>：AI基础设施（NVDA/TSM）持续破纪录，而它正在瓦解的经济每季度恶化</li>
+        </ul>
+
+        <h2>三、三层多米诺骨牌</h2>
+
+        <h3>第一层：真实经济层（2026—2027年初）</h3>
+
+        <p><strong>A. 鬼魂GDP（Ghost GDP）</strong></p>
+        <table>
+          <tr><th>指标</th><th>数值</th><th>性质</th></tr>
+          <tr><td>名义GDP增速</td><td>中高单位数</td><td>「好看」的数字</td></tr>
+          <tr><td>人均实际工资</td><td>持续负增长</td><td>真实困境</td></tr>
+          <tr><td>劳动分配率</td><td>56%（2024）→ 46%（2028）</td><td>史上最快下滑</td></tr>
+          <tr><td>S&amp;P500</td><td>峰值8000（2026.10）→ 跌38%</td><td>市场终于承认</td></tr>
+        </table>
+        <p>核心悖论：一个北达科他州的GPU集群产出抵10000个曼哈顿白领，但机器不买咖啡、不付房租、不申请按揭。货币流速归零。</p>
+
+        <p><strong>B. SaaS与软件的瓦解</strong></p>
+        <div class="mermaid" id="mermaid-saas">
+flowchart TD
+    A["Agentic Coding能力跃升<br/>2025年底"] --> B["企业内部可自建<br/>替代$500k年费SaaS"]
+    B --> C["采购谈判权力反转<br/>ServiceNow砍价30%"]
+    C --> D["长尾SaaS死亡<br/>Monday/Zapier/Asana"]
+    D --> E["系统级SaaS承压<br/>ServiceNow Q3利润警告"]
+    E --> F["竞争格局崩塌<br/>差异化消失 → 价格战"]
+    F --> G["裁员客户取消授权<br/>营收机械性萎缩"]
+    G --> E
+        </div>
+        <p>ServiceNow的递归讽刺：为workflow automation的公司被更好的workflow automation颠覆，而其应对方式是裁员并将节省资金投入颠覆自己的技术。</p>
+
+        <p><strong>C. 中介层消失（Intermediation Layer Collapse）</strong></p>
+        <blockquote>「过去五十年，美国经济在人类局限性之上建了一层巨大的租金提取层——东西需要时间、耐心耗尽、品牌熟悉度替代了尽职调查，大多数人愿意为避免更多点击而接受坏价格。」</blockquote>
+        <p>受冲击的中介模式：</p>
+        <ul>
+          <li><strong>惰性订阅</strong>：AI Agent自动取消/谈判续期合同，CLV（客户终身价值）断崖</li>
+          <li><strong>旅游预订平台</strong>：Agent自主完成行程规划，平台失去存在意义</li>
+          <li><strong>保险</strong>：每年自动比价，取消了保险公司依赖「客户懒得换」的15-20%溢价</li>
+          <li><strong>房地产佣金</strong>：AI拥有MLS数据库后，买方佣金从2.5-3%压缩至1%以下</li>
+          <li><strong>信用卡中间商</strong>：机器间交易直接绕过2-3% Interchange fee，转向稳定币结算</li>
+        </ul>
+        <p><strong>DoorDash 的护城河</strong>是「你饿了、你懒、这是你手机屏幕上的App」。Agent没有主屏幕——它同时检查DoorDash、UberEats和二十个新竞品，选最低费用。</p>
+
+        <h3>第二层：金融系统层（2027年）</h3>
+        <div class="mermaid" id="mermaid-finance">
+graph TD
+    A["白领工作崩塌<br/>消费萎缩"] --> B["PE持有SaaS LBO<br/>ARR不再是ARR"]
+    B --> C["私募信贷违约潮<br/>Zendesk $5B违约"]
+    C --> D["保险公司资本压力<br/>Apollo/Athene"]
+    D --> E["监管收紧<br/>RBC要求提高"]
+    E --> F["被迫出售资产<br/>流动性枯竭"]
+    F --> G["按揭市场<br/>结构性冲击"]
     G --> A
-
-    classDef red fill:#e55c5c,color:#fff,stroke:none
-    classDef orange fill:#c0704a,color:#fff,stroke:none
-          </div>
         </div>
+        <p><strong>「永久资本」神话破灭</strong>：大型另类资产管理公司（Apollo/Blackstone/KKR）收购人寿保险公司 → 用年金作为稳定负债基础 → 将保险资金投入自己管理的私募信贷。「永久资本」的实质：是美国家庭的养老储蓄，投入正在违约的PE软件债。</p>
 
-        <div class="callout">
-          <p><strong>关键洞察</strong>：每家公司的个体理性选择（裁员 → 买 AI），汇聚成集体灾难。</p>
-          <p>这个循环<strong>没有自然刹车</strong>——不像传统商业周期有内置修复机制。</p>
+        <p><strong>Zendesk 案例</strong>：2022年以$102亿私有化，$50亿直贷。AI已完全替代其客服票务功能，ARR成了「还没走的收入」。成为私募信贷史上最大软件类违约，每张债券标至58分。</p>
+
+        <p><strong>按揭市场的定时炸弹</strong>：美国住宅按揭市场约$13万亿。2028年借款人特征：FICO 780+，首付20%，历史清洁。区别于2008年（贷款从发放之日即为坏账），2028年危机是<em>「贷款发放时是好的，世界在贷款存续期间改变了」</em>。</p>
+
+        <h3>第三层：政府财政层（2027—2028年）</h3>
+        <ul>
+          <li><strong>税收结构性失血</strong>：联邦税收基础本质上是「对人类时间征税」——2028年Q1实际税收较CBO基准低12%</li>
+          <li><strong>劳动分配率历史最快下滑</strong>：1974年64% → 2024年56% → 2028年46%</li>
+          <li><strong>政策工具失效悖论</strong>：降息/QE可以修复金融引擎，但无法修复真实经济引擎——「可以把利率降到零……但Claude Agent仍可以用$200/月替代$18万/年的产品经理」</li>
+          <li><strong>政治僵局</strong>：转型经济法案 vs AI繁荣共享法案；右派称「马克思主义」，左派称「监管俘获」；占领硅谷运动蔓延</li>
+        </ul>
+
+        <h2>四、底层假设拆解（第一性原理）</h2>
+        <table>
+          <tr><th>假设</th><th>旧世界有效的原因</th><th>新世界失效的原因</th></tr>
+          <tr><td><strong>技术进步创造就业</strong></td><td>每项新工作仍需人类执行</td><td>AI是通用智能，可接管人类被重新部署的那些任务</td></tr>
+          <tr><td><strong>白领借款人是低风险</strong></td><td>收入稳定、未来可期</td><td>未来收入假设已成废纸</td></tr>
+          <tr><td><strong>私募信贷不会系统性崩塌</strong></td><td>封闭结构无挤兑风险</td><td>永久资本实际上是家庭养老储蓄，监管压力下仍会被迫出售</td></tr>
+          <tr><td><strong>坏消息最终等于好消息</strong></td><td>经济低迷 → 降息 → 复苏</td><td>这次根本原因不是周期性的，利率工具失效</td></tr>
+          <tr><td><strong>中介层有护城河</strong></td><td>人类习惯性、惰性、信息不对称</td><td>Agent没有主屏幕，对习惯免疫</td></tr>
+        </table>
+
+        <h2>五、关键数据与证据清单</h2>
+        <table>
+          <tr><th>数据点</th><th>数值</th></tr>
+          <tr><td>S&amp;P500 峰值 → 跌幅</td><td>8000（2026.10）→ -38%</td></tr>
+          <tr><td>失业率（2028年6月）</td><td>10.2%</td></tr>
+          <tr><td>初次申请失业金（2027 Q3）</td><td>487,000（2020年4月以来最高）</td></tr>
+          <tr><td>劳动收入占GDP（2024→2028）</td><td>56% → 46%（史上最快下滑）</td></tr>
+          <tr><td>Zendesk违约规模</td><td>$50亿直贷标至58分</td></tr>
+          <tr><td>私募信贷规模（2015→2026）</td><td>&lt;$1万亿 → &gt;$2.5万亿</td></tr>
+          <tr><td>旧金山/西雅图/奥斯汀房价同比</td><td>-11% / -9% / -8%</td></tr>
+          <tr><td>联邦税收缺口</td><td>较CBO基准低12%（2028 Q1）</td></tr>
+          <tr><td>美国住宅按揭总量</td><td>约$13万亿</td></tr>
+        </table>
+
+        <h2>六、全局视角与现实意义</h2>
+        <p>文章最后揭示的真正目的（写于2026年2月）：</p>
+        <blockquote>「但你不是在2028年6月读这篇文章。你是在2026年2月读它。S&amp;P接近历史高点。负反馈螺旋尚未开始。金丝雀还活着。」</blockquote>
+        <p><strong>作为投资者的行动框架</strong>：</p>
+        <ul>
+          <li>审查你的投资组合中有多少建立在「不会撑过这个十年」的假设之上</li>
+          <li>哪些商业模式依赖「人类摩擦」（惯性、惰性、信息不对称）？这些护城河正在归零</li>
+          <li>哪些资产是真正凸性于AI趋势的？哪些是暴露于「人类智能溢价贬值」的？</li>
+        </ul>
+        <p><strong>作为社会成员的行动框架</strong>：</p>
+        <ul>
+          <li>现行的劳动市场、按揭市场、税收体系都是为「人类智能稀缺」假设设计的</li>
+          <li>这个假设正在被颠覆——我们需要在时间窗口关闭之前建立新的框架</li>
+          <li>最紧迫的问题：如何在AI加速时重新分配产出？谁拥有AI的产出？</li>
+        </ul>
+
+        <div class="meta-footer">分析完成时间：2026-02-26 · 主题：midnight-blue（午夜蓝 — 未来危机叙事）</div>
+
+        <div class="related">
+          <h3>相关阅读</h3>
+          <div class="related-cards">
+            <a href="../0226-openclaw-ecosystem/" class="related-card">
+              <div class="related-card-title">OpenClaw 生态爆发：六款产品，三个方向</div>
+              <div class="related-card-summary">OpenClaw生态爆发，基模托管、桌面安装、Skill生态三条路线同时涌现，本质是AI Agent民主化的不同切面。</div>
+              <div class="related-card-date">2026-02-26 · #AI #Agent</div>
+            </a>
+            <a href="../0226-humanities-ai-coding/" class="related-card">
+              <div class="related-card-title">文科生 72 小时杀入 GitHub 全球榜</div>
+              <div class="related-card-summary">投行精英杨天润用AI军团闯入GitHub贡献榜前30，Agentic Engineering方法论的真实边界与幸存者偏差警示。</div>
+              <div class="related-card-date">2026-02-26 · #AI #创业</div>
+            </a>
+          </div>
         </div>
       </section>
 
-      <hr />
-
-      <!-- Section 3 -->
-      <section class="section" id="dominos">
-        <div class="section-header">
-          <div class="section-num">三</div>
-          <h2>三层多米诺骨牌</h2>
+      <!-- ════════════ TAB 2: 批判分析 ════════════ -->
+      <section class="tab-section" id="tab-critique">
+        <div class="article-meta">
+          <div class="article-date">2026-02-26 · 来源：CitriniResearch</div>
+          <div class="tags">
+            <span class="tag">#AI</span>
+            <span class="tag">#经济</span>
+            <span class="tag">#未来</span>
+            <span class="tag">#科技</span>
+            <span class="tag">#金融</span>
+          </div>
         </div>
 
-        <h3>第一层：劳动力市场（2026 年）</h3>
-        <ul>
-          <li><strong>导火索</strong>：2025 年底，Agentic coding 工具能力跃升
-            <ul>
-              <li>一个开发者 + Claude Code，数周内可复现中端 SaaS 核心功能</li>
-              <li>CIO 开始问："我们能不能自己建？"</li>
-            </ul>
-          </li>
-          <li><strong>SaaS 的死亡方程式</strong>：
-            <ul>
-              <li>长尾 SaaS（Monday.com、Zapier、Asana）：直接被替代</li>
-              <li>系统级 SaaS（ServiceNow 等）：因客户裁员导致席位减少，同时自身也被迫裁员买 AI</li>
-              <li><strong>悖论</strong>：受 AI 威胁最大的公司，成为 AI 最激进的采购者</li>
-            </ul>
-          </li>
-        </ul>
+        <h1>2028 全球智能危机：苏格拉底批判</h1>
 
-        <div class="mermaid-wrap">
-          <div class="mermaid">
+        <h2>一、核心论点的前提审查</h2>
+
+        <h3>论点 1："人类智能置换螺旋是无刹车的负反馈循环"</h3>
+        <blockquote>「AI能力提升 → 裁员 → 更多AI投资 → AI能力提升……一个没有自然刹车的负反馈循环。」</blockquote>
+        <p><strong>苏格拉底式追问</strong>：</p>
+        <ol>
+          <li><strong>「这个循环真的没有刹车吗？」</strong>
+            <ul>
+              <li>⚠️ 能源约束：AI推理需要大量算力，电力基础设施建设速度可能成为自然限速器（文章本身提到GE Vernova涡轮产能排到2040）</li>
+              <li>⚠️ 数据边际回报递减：AI训练依赖人类生产的数据，当人类产出减少时，新数据供给也可能萎缩</li>
+              <li>⚠️ 政治/监管刹车：文章本身描述了「AI推理计算税」和「AI繁荣共享法案」的讨论</li>
+            </ul>
+          </li>
+          <li><strong>「如果反过来会怎样？」</strong>
+            <ul>
+              <li>白领职业有监管壁垒（医生执照、律师执照），部署阻力远超文章暗示的速度</li>
+              <li>消费崩溃也会减缓AI的商业化——企业软件预算同步减少</li>
+            </ul>
+          </li>
+          <li><strong>「这个结论依赖哪些隐藏假设？」</strong>
+            <ul>
+              <li>假设：AI替代是突然的、不可逆的（忽略了劳动合同保护、再培训、工会协商等摩擦力）</li>
+              <li>假设：政府完全失效（而实际上，大多数危机都触发了史无前例的政策干预）</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>论点 2："鬼魂GDP——产出增长但不流通"</h3>
+        <blockquote>「一个北达科他州的GPU集群产出10000个曼哈顿白领的工作，是经济流行病而非经济万灵药。货币流速归零。」</blockquote>
+        <ol>
+          <li><strong>「货币流速真的会归零吗？」</strong>
+            <ul>
+              <li>⚠️ AI公司的资本支出是真实的经济活动：$150-200亿/季度数据中心投资流向建筑工人、电力工程师、半导体工厂</li>
+              <li>⚠️ GPU集群所有者（资本家）确实会消费，只是消费结构不同——这改变分配，不等于零流通</li>
+            </ul>
+          </li>
+          <li><strong>「历史上没有类似案例可以参照吗？」</strong>
+            <ul>
+              <li>工业革命时期也有类似恐惧（勒德运动），最终人类找到了新的就业形式</li>
+              <li>文章反驳：「每个新工作都需要人来执行」——AI首次打破了这个规律</li>
+              <li>⚠️ 但文章无法证伪「某些人类特质（情感、创造力、道德判断）在经济上永远无法被AI替代」</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>论点 3："传统政策工具对AI危机完全失效"</h3>
+        <blockquote>「你可以把利率降到零、买下所有MBS……这不会改变Claude Agent用$200/月替代$18万/年产品经理的事实。」</blockquote>
+        <ol>
+          <li><strong>「政策工具真的完全失效吗？」</strong>
+            <ul>
+              <li>⚠️ 全民基本收入（UBI）是文章明确提到但轻描淡写的：如果政府直接给失业者转移支付，消费能维持，负反馈可能被打断</li>
+              <li>⚠️ 历史上最激进的政策干预恰恰发生在危机最深处（FDR新政、COVID救助）——对政策能力的悲观是建立在「政客正在互相指责」这一短期观察上的</li>
+            </ul>
+          </li>
+          <li><strong>「2028危机真的无法与历史类比吗？」</strong>
+            <ul>
+              <li>⚠️ 「AI让新工作也无法创造」这个论断是预测，不是事实——2026年写作时这一点尚未被证实</li>
+              <li>⚠️ 我们今天同样可能无法想象AI时代的新职业形态，就像农业时代的人无法预见工厂工人</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h2>二、逻辑漏洞地图</h2>
+        <div class="mermaid" id="mermaid-critique">
 graph LR
-    A["SaaS 客户裁员"] -->|取消席位| B["SaaS 营收下滑"]
-    B -->|被迫| C["SaaS 自身裁员"]
-    C -->|节省成本| D["投入更多 AI"]
-    D -->|能力提升| E["新一轮替代"]
+    A["核心叙事"] --> B1["内在矛盾"]
+    A --> B2["选择性证据"]
+    A --> B3["时间压缩偏差"]
+    A --> B4["单国视角局限"]
+    A --> B5["政策悲观过激"]
+
+    B1 --> C1["AI基础设施仍景气<br/>但说整体经济在崩塌<br/>两者真的可共存？"]
+    B2 --> C2["举Zendesk/ServiceNow<br/>但未提医疗/建筑/能源<br/>等仍繁荣的行业"]
+    B3 --> C3["2年内从繁荣到危机<br/>历史结构性变革<br/>通常需要10-20年"]
+    B4 --> C4["以美国为主要视角<br/>台湾/韩国在反向<br/>获益（文章自己承认）"]
+    B5 --> C5["政府被描绘为完全无效<br/>但COVID证明危机下<br/>可以15%赤字率快速救市"]
+        </div>
+
+        <table>
+          <tr><th>漏洞类型</th><th>具体表现</th><th>严重程度</th></tr>
+          <tr><td><strong>时间压缩偏差</strong></td><td>假设2年内就能从AI爆发到10.2%失业率，历史上工业化用了几十年</td><td>🔴 高</td></tr>
+          <tr><td><strong>选择性证据</strong></td><td>大量篇幅写软件/金融/服务业崩溃，几乎不提医疗、能源、建筑的稳定</td><td>🔴 高</td></tr>
+          <tr><td><strong>内在矛盾</strong></td><td>NVDA破纪录+台湾韩国大涨 vs 整体经济衰退——两者能同时持续多久？</td><td>🟡 中</td></tr>
+          <tr><td><strong>过度概括</strong></td><td>「无刹车负反馈」忽略了政策、能源约束、监管、人类行为惰性等刹车机制</td><td>🟡 中</td></tr>
+          <tr><td><strong>单国视角</strong></td><td>以美国白领经济为原型，AI的赢家（台湾/韩国/AI公司）同样是全球经济的一部分</td><td>🟡 中</td></tr>
+          <tr><td><strong>政策悲观过激</strong></td><td>将政治当前僵局（2026年截面）外推为危机期间的持续状态</td><td>🟢 低</td></tr>
+        </table>
+
+        <h2>三、被忽略的反叙事（Alternative Narratives）</h2>
+
+        <h3>反叙事 1：这是一次历史上最强烈的需求侧扩张，而非崩塌</h3>
+        <ul>
+          <li><strong>原叙事</strong>：AI让消费萎缩，经济走向「鬼魂GDP」</li>
+          <li><strong>反叙事</strong>：消费者AI Agent让每个人的消费效率提升——同等支出获得更多价值。这是实质性的生活水平提升，只是GDP统计方式捕捉不到</li>
+          <li><strong>文章自己的佐证</strong>：外卖骑手保留了90-95%的配送费（以前被平台拿走）——这是底层劳动者的收入提升</li>
+        </ul>
+
+        <h3>反叙事 2：资本回报率提升会通过金融资产间接惠及更广泛人群</h3>
+        <ul>
+          <li><strong>原叙事</strong>：AI产出全部流向「算力所有者」，分配极度不平等</li>
+          <li><strong>反叙事</strong>：美国401(k)/共同基金普及率高，普通中产家庭持有大量股票资产。如果AI推高股市，财富效应会惠及更广的群体</li>
+          <li><strong>关键缺口</strong>：文章提到「顶部10%占50%消费」——但未分析这10%里有多少是普通中产通过养老金账户参与的</li>
+        </ul>
+
+        <h3>反叙事 3：政府的财政能力被严重低估</h3>
+        <ul>
+          <li><strong>原叙事</strong>：税收结构性失血 → 政府无法支撑救助</li>
+          <li><strong>反叙事</strong>：美国印自己的货币，联储可以直接支持国债发行。日本债务/GDP超过260%，从未发生传统意义的财政崩溃。货币主权国家的「财政约束」比文章暗示的更有弹性</li>
+        </ul>
+
+        <h3>反叙事 4：AI驱动的通缩可以替代传统刺激</h3>
+        <ul>
+          <li><strong>原叙事</strong>：AI推高失业，消费崩塌，陷入通缩螺旋</li>
+          <li><strong>反叙事</strong>：如果AI让每件商品/服务的成本大幅下降，「购买力」的萎缩可以被价格下降部分对冲。现实中AI可能同时推高通缩，让既有储蓄的价值更高</li>
+        </ul>
+
+        <h2>四、证据强度评级</h2>
+        <table>
+          <tr><th>证据</th><th>类型</th><th>评级</th><th>理由</th></tr>
+          <tr><td>人类智能置换螺旋的逻辑结构</td><td>理论推演</td><td><strong>强</strong></td><td>机制清晰，内部逻辑自洽，真实公司行为已有佐证</td></tr>
+          <tr><td>从「创意破坏有益」到「AI不同」的论证</td><td>类比+逻辑</td><td><strong>强</strong></td><td>「每个新工作都需要人执行」这个区别是真实的核心洞察</td></tr>
+          <tr><td>私募信贷的系统性风险结构描述</td><td>结构分析</td><td><strong>中</strong></td><td>架构描述准确，但传导速度和规模是推测性的</td></tr>
+          <tr><td>按揭市场$13万亿风险</td><td>情景推演</td><td><strong>中</strong></td><td>机制合理，文章本身也承认「还未爆发」，只是轨迹令人担忧</td></tr>
+          <tr><td>ServiceNow/DoorDash作为整体趋势代表</td><td>案例研究</td><td><strong>弱</strong></td><td>选择了最脆弱的案例，未讨论抗AI冲击行业（医疗/基础设施）</td></tr>
+          <tr><td>2年内失业率10.2%的时间框架</td><td>情景设定</td><td><strong>弱</strong></td><td>时间压缩过于剧烈，与历史上所有结构性转型速度不符</td></tr>
+        </table>
+
+        <h2>五、综合评价</h2>
+
+        <h3>文章的真正价值</h3>
+        <ol>
+          <li><strong>情景预演的稀缺价值</strong>：不是预测，而是一个被系统性低估的尾部风险的详细路径图，逼迫读者把「AI长期利好」和「分配崩塌」两件事同时放在脑子里</li>
+          <li><strong>机制分析的严密性</strong>：人类智能置换螺旋、中介层瓦解的具体机制、私募信贷的隐藏架构——这些分析即使在最乐观的AI叙事下也值得认真对待</li>
+          <li><strong>时间拉力的设计</strong>：文章最后揭示「你是在2026年读这篇文章，金丝雀还活着」——这比任何预测都更有冲击力</li>
+        </ol>
+
+        <h3>站得住脚的论点</h3>
+        <ul>
+          <li>✅ AI确实在用历史上前所未有的速度替代特定类别的白领工作</li>
+          <li>✅ 现行政策工具（货币政策）无法修复结构性就业问题，这是真的</li>
+          <li>✅ 私募信贷的「永久资本」叙事掩盖了真实的风险敞口，这一点尤其尖锐</li>
+          <li>✅ 中介层的护城河确实建立在人类摩擦之上，而AI对此免疫</li>
+        </ul>
+
+        <h3>需要更多证据或更谨慎的论点</h3>
+        <ul>
+          <li>⚠️ <strong>2年时间框架</strong>：太快。历史上所有重大结构性变革都比模型预期慢，摩擦力是真实的</li>
+          <li>⚠️ <strong>政策完全失效</strong>：高估了政治僵局的持久性，低估了危机深化时的政治动员能力</li>
+          <li>⚠️ <strong>「无刹车」表述</strong>：忽略了能源/算力/监管等自然限制</li>
+          <li>⚠️ <strong>单一受害者叙事</strong>：文章视角几乎完全是美国白领，AI的赢家几乎缺席</li>
+        </ul>
+
+        <h3>批判性建议</h3>
+        <p><strong>给投资者</strong>：不要因为时间框架过激就忽视机制。机制是真实的，时间是不确定的。问「我的持仓对这个机制有多大敞口」而非「这会不会在2年内发生」。</p>
+        <p><strong>给政策制定者</strong>：即使在风险未完全实现时，就应该开始讨论AI产出分配机制，而不是等危机爆发后在政治压力下被迫出牌。</p>
+        <p><strong>给技术乐观主义者</strong>：「技术进步最终总是净正面的」——可能是真的，但前提是过渡期不引发政治不稳定、金融崩溃或社会碎裂。<strong>过渡期的设计比技术本身更关键。</strong></p>
+
+        <div class="meta-footer">批判完成时间：2026-02-26 · 核心判断：这是当前对AI宏观尾部风险分析最系统、最严密的文章之一。时间压缩偏差是最大弱点，但机制分析和结构性风险识别的价值远超这一局限。</div>
+
+        <div class="related">
+          <h3>相关阅读</h3>
+          <div class="related-cards">
+            <a href="../0226-openclaw-ecosystem/" class="related-card">
+              <div class="related-card-title">OpenClaw 生态爆发：六款产品，三个方向</div>
+              <div class="related-card-summary">OpenClaw生态爆发，基模托管、桌面安装、Skill生态三条路线同时涌现，本质是AI Agent民主化的不同切面。</div>
+              <div class="related-card-date">2026-02-26 · #AI #Agent</div>
+            </a>
+            <a href="../0226-humanities-ai-coding/" class="related-card">
+              <div class="related-card-title">文科生 72 小时杀入 GitHub 全球榜</div>
+              <div class="related-card-summary">投行精英杨天润用AI军团闯入GitHub贡献榜前30，Agentic Engineering方法论的真实边界与幸存者偏差警示。</div>
+              <div class="related-card-date">2026-02-26 · #AI #创业</div>
+            </a>
           </div>
         </div>
-
-        <ul>
-          <li><strong>白领工人的命运链</strong>：
-            <ul>
-              <li>第一波：直接失业（软件、金融、咨询）</li>
-              <li>第二波：降薪 → 涌入蓝领/零工市场 → 压低全行业薪资</li>
-              <li>第三波：随着自动驾驶普及，连零工经济的退路也被封堵</li>
-            </ul>
-          </li>
-        </ul>
-
-        <h3>第二层：中介经济层（2026—2027 年）</h3>
-        <p><strong>本质</strong>：过去 50 年，美国经济在人类局限性上建立了巨大的"摩擦税"层——订阅惰性、品牌溢价、信息不对称、懒得比价，这些是万亿美元市值的底层逻辑。</p>
-        <p><strong>AI Agent 逐项摧毁：</strong></p>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>被破坏的"护城河"</th>
-                <th>典型案例</th>
-                <th>破坏机制</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>订阅惰性</td><td>各类订阅服务</td><td>Agent 自动检测未使用订阅并取消</td></tr>
-              <tr><td>出行中介</td><td>旅行预订平台</td><td>Agent 一键组合最优行程</td></tr>
-              <tr><td>保险惰性</td><td>保险续签</td><td>Agent 自动年度比价重购</td></tr>
-              <tr><td>信息不对称</td><td>房产中介（佣金 2.5–3% → &lt;1%）</td><td>Agent 直接调取 MLS 数据</td></tr>
-              <tr><td>习惯性 App 忠诚</td><td>DoorDash / Uber Eats</td><td>Agent 没有"主屏幕"，永远选最优</td></tr>
-              <tr><td>支付中介</td><td>Mastercard（2–3% 刷卡费）</td><td>M2M 交易转向稳定币（Solana / L2）</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="callout red">
-          <p><strong>核心结论</strong>："摩擦"就是护城河；摩擦趋零，护城河消失。</p>
-        </div>
-
-        <h3>第三层：金融系统（2027 年）</h3>
-
-        <div class="mermaid-wrap">
-          <div class="mermaid">
-graph TD
-    A["私募信贷 2.5 万亿美元\n大量配置 PE 收购的 SaaS"] --> B["SaaS ARR 不再 Recurring"]
-    B --> C["Zendesk 等大型违约\n58 美分 / $1"]:::red
-    C --> D["穆迪降级 180 亿 PE 软件债"]
-    D --> E["私募信贷损失暴露"]
-    E --> F["核心问题：永久资本 ≠ 无风险"]:::red
-    F --> G["保险公司持有同类资产\nApollo-Athene / KKR-Global Atlantic"]
-    G --> H["监管收紧 RBC 要求"]
-    H --> I["被迫筹资或抛售"]
-    I --> J["系统性压力扩散"]
-
-    classDef red fill:#e55c5c,color:#fff,stroke:none
-          </div>
-        </div>
-
-        <ul>
-          <li><strong>"永久资本"神话破灭</strong>：
-            <ul>
-              <li>大型另类资管公司（Apollo、KKR、Brookfield）收购保险公司作为资金来源</li>
-              <li>本质是：普通家庭的养老金 → 年金 → PE 收购的 SaaS 债务</li>
-              <li>"锁定资本"的底层其实是保险单持有人的储蓄</li>
-            </ul>
-          </li>
-          <li><strong>房贷市场：最后的炸弹（2027—2028 年）</strong>：
-            <ul>
-              <li>美国住宅按揭市场规模：<strong>13 万亿美元</strong></li>
-              <li>这次不同于 2008：贷款人 FICO 780+，首付 20%，贷款本身没问题</li>
-              <li><strong>问题是世界变了</strong>：白领收入预期结构性下移，贷款时假设的收入未来不复存在</li>
-              <li>旧金山房价同比 -11%，西雅图 -9%，奥斯汀 -8%</li>
-              <li>仍在还款，但靠动用储蓄、停止消费支撑——只差最后一击</li>
-            </ul>
-          </li>
-        </ul>
       </section>
 
-      <hr />
+    </main>
+  </div>
 
-      <!-- Section 4 -->
-      <section class="section" id="different">
-        <div class="section-header">
-          <div class="section-num">四</div>
-          <h2>为什么这次不一样：破解"创新创造就业"神话</h2>
-        </div>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose', themeVariables: { primaryColor: '#1a2233', primaryTextColor: '#e0f2fe', primaryBorderColor: '#22d3ee', lineColor: '#7db8d4', secondaryColor: '#0c1f35', tertiaryColor: '#0a0e1a', fontFamily: 'PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif', fontSize: '14px' } });
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>历史技术革命</th>
-                <th>AI 革命</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>ATM → 银行分支更多 → 柜员增加</td>
-                <td>AI Agent → 替代管理层 → 无新增岗位</td>
-              </tr>
-              <tr>
-                <td>互联网淘汰旅行社 → 创造电商/物流就业</td>
-                <td>AI 淘汰知识工作者 → 新岗位（Prompt 工程师等）报酬远低于旧岗位</td>
-              </tr>
-              <tr>
-                <td>柯达/百视达：抵制新技术 → 慢慢死</td>
-                <td>SaaS 公司：<strong>拥抱 AI → 消灭自己的营收基础</strong></td>
-              </tr>
-              <tr>
-                <td>被替代的人可以转向新技能</td>
-                <td>AI 已在进化到能胜任人类转岗后的新工作</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="callout">
-          <p><strong>第一性原理结论</strong>：过去，人类智能是<strong>稀缺投入</strong>，所有经济制度围绕此假设建立。</p>
-          <p>AI 正在使人类智能<strong>变得不稀缺</strong>。这不是行业性冲击，而是底层假设的颠覆。</p>
-        </div>
-      </section>
-
-      <hr />
-
-      <!-- Section 5 -->
-      <section class="section" id="fiscal">
-        <div class="section-header">
-          <div class="section-num">五</div>
-          <h2>财政困境：收税逻辑崩塌</h2>
-        </div>
-        <ul>
-          <li>美国税收本质 = 对<strong>人类劳动时间</strong>征税（个人所得税 + 工资税是主干）</li>
-          <li>AI 带来的生产力增益流向资本和算力，不流经工资</li>
-          <li><strong>结果</strong>：
-            <ul>
-              <li>2028 年 Q1 联邦税收低于 CBO 预测 <strong>12%</strong></li>
-              <li>劳动力 GDP 份额：1974 年 64% → 2024 年 56% → 2028 年 <strong>46%</strong>（史上最快降幅）</li>
-              <li>政府需要在<strong>税收最少的时刻，转移最多的钱给家庭</strong></li>
-            </ul>
-          </li>
-        </ul>
-      </section>
-
-      <hr />
-
-      <!-- Section 6 -->
-      <section class="section" id="policy">
-        <div class="section-header">
-          <div class="section-num">六</div>
-          <h2>政策困境与社会撕裂</h2>
-        </div>
-
-        <div class="mermaid-wrap">
-          <div class="mermaid">
-graph LR
-    危机 --> 政府提案
-    政府提案 --> TEA["过渡经济法案\n直接补贴被替代工人\n资金来源：算力税 + 赤字"]
-    政府提案 --> SAPA["共享AI繁荣法案\n设立主权财富基金\n对AI输出征税分红"]
-    TEA --> R["右派：这是马克思主义\n算力税让中国超车"]
-    TEA --> L["左派：被科技巨头俘获"]
-    SAPA --> H["财政鹰派：赤字不可持续"]
-    SAPA --> D["财政鸽派：GFC后过早紧缩是前车之鉴"]
-          </div>
-        </div>
-
-        <ul>
-          <li>政治争吵速度 &lt; 危机演进速度</li>
-          <li>"占领硅谷"运动封锁 Anthropic、OpenAI 总部</li>
-          <li>AI 实验室创始人财富积累速度使"镀金时代"相形见绌</li>
-        </ul>
-      </section>
-
-      <hr />
-
-      <!-- Section 7 -->
-      <section class="section" id="dual">
-        <div class="section-header">
-          <div class="section-num">七</div>
-          <h2>双重反馈回路全景</h2>
-        </div>
-
-        <div class="mermaid-wrap">
-          <div class="mermaid">
-graph TD
-    subgraph real ["实体经济回路"]
-        R1["AI 能力提升"] --> R2["裁员"]
-        R2 --> R3["消费下降"]
-        R3 --> R4["企业利润承压"]
-        R4 --> R5["买更多 AI"]
-        R5 --> R1
-    end
-
-    subgraph fin ["金融回路"]
-        F1["白领收入下降"] --> F2["房贷违约风险"]
-        F2 --> F3["银行信贷收紧"]
-        F3 --> F4["财富效应消失"]
-        F4 --> F1
-    end
-
-    R2 --> F1
-    F3 --> R3
-          </div>
-        </div>
-
-        <div class="callout">
-          <p>传统政策工具（降息、QE）可以修复<strong>金融回路</strong>，</p>
-          <p>但无法修复<strong>实体经济回路</strong>——因为根本原因不是金融条件过紧，</p>
-          <p>而是 Claude Agent 能以 <strong>200 美元/月</strong>替代一个 <strong>18 万年薪</strong>的产品经理。</p>
-        </div>
-      </section>
-
-      <hr />
-
-      <!-- Section 8 -->
-      <section class="section" id="now">
-        <div class="section-header">
-          <div class="section-num">八</div>
-          <h2>现在是 2026 年 2 月：窗口仍开着</h2>
-        </div>
-
-        <div class="callout" style="border-left-color: var(--link); background: rgba(126,184,247,0.06);">
-          <p><em>你不是在 2028 年 6 月读这篇文章。你是在 2026 年 2 月读到它的。</em></p>
-        </div>
-
-        <ul>
-          <li>S&amp;P 仍在历史高位</li>
-          <li>负反馈回路尚未启动</li>
-          <li>以上某些情景或许不会完全成真</li>
-          <li>但机器智能的加速是确定的，人类智能的稀缺性溢价正在收窄</li>
-        </ul>
-
-        <div class="final-box">
-          <div class="final-question">最终问题只有一个：<br>我们能否在时间窗口关闭之前，建立起适应新世界的制度框架？</div>
-          <ul>
-            <li><strong>作为投资者</strong>：审视投资组合中有多少比例建立在"人类智能稀缺"这一假设之上</li>
-            <li><strong>作为社会</strong>：在反馈回路自我强化之前，建立新的分配框架</li>
-          </ul>
-        </div>
-      </section>
-
-    </div><!-- /content -->
-  </main>
-</div><!-- /layout -->
-
-<script>
-  // Mobile menu
-  const menuBtn = document.getElementById('menuBtn');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-
-  function openMenu() {
-    sidebar.classList.add('open');
-    overlay.classList.add('open');
-  }
-  function closeMenu() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('open');
-  }
-
-  menuBtn.addEventListener('click', () => {
-    sidebar.classList.contains('open') ? closeMenu() : openMenu();
-  });
-  overlay.addEventListener('click', closeMenu);
-
-  // Close on nav item click (mobile)
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      if (window.innerWidth <= 768) closeMenu();
-    });
-  });
-
-  // Active nav highlight on scroll
-  const sections = document.querySelectorAll('.section');
-  const navItems = document.querySelectorAll('.nav-item');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.id;
-        navItems.forEach(item => {
-          item.classList.toggle('active', item.getAttribute('href') === '#' + id);
-        });
-      }
-    });
-  }, {
-    rootMargin: '-20% 0px -70% 0px',
-    threshold: 0
-  });
-
-  sections.forEach(s => observer.observe(s));
-
-  // Init Mermaid
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
-    themeVariables: {
-      primaryColor: '#1a1d27',
-      primaryTextColor: '#e2e4ee',
-      primaryBorderColor: '#2e3347',
-      lineColor: '#8b90a8',
-      secondaryColor: '#222638',
-      tertiaryColor: '#1e2438',
-      background: '#1a1d27',
-      mainBkg: '#1a1d27',
-      nodeBorder: '#2e3347',
-      clusterBkg: '#1a1d27',
-      titleColor: '#e2e4ee',
-      edgeLabelBackground: '#1a1d27',
-      fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
-      fontSize: '14px'
-    },
-    flowchart: {
-      useMaxWidth: true,
-      htmlLabels: true,
-      curve: 'basis'
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+      buildToc();
     }
-  });
-</script>
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function buildToc() {
+      const activeSection = document.querySelector('.tab-section.active');
+      const headings = activeSection.querySelectorAll('h2, h3');
+      const sidebar = document.getElementById('sidebar');
+      sidebar.innerHTML = '<div class="nav-label">目录</div>';
+      headings.forEach((h, i) => {
+        if (!h.id) h.id = 'h-' + i;
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'nav-item' + (h.tagName === 'H3' ? ' h3' : '');
+        a.textContent = h.textContent;
+        a.onclick = () => { if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open'); };
+        sidebar.appendChild(a);
+      });
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
+          const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      buildToc();
+      document.querySelectorAll('h2, h3').forEach(h => observer.observe(h));
+    });
+  </script>
 </body>
 </html>
